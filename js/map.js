@@ -11,6 +11,8 @@ var TIME_LIST = ['12:00', '13:00', '14:00'];
 var FEATURES_LIST = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 var adsList = [];
 
+var ADS_NUMBER = 8;
+
 function shuffle(a) {
   var j;
   var x;
@@ -38,38 +40,87 @@ function getRandomInRange(min, max) {
 }
 
 function getRandomLengthArr(arr) {
-  var randomArrNumber = getRandomInRange(0, arr.lenght);
+  var randomArrNumber = getRandomInRange(0, arr.length);
   shuffle(arr);
   return arr.slice(0, randomArrNumber);
 }
 
-var locationX = 0;
-var locationY = 0;
+for (var i = 0; i < ADS_NUMBER; i++) {
 
-for (var i = 0; i < 8; i++) {
-  locationX = getRandomInRange(300, 900);
-  locationY = getRandomInRange(100, 500);
+  var locationX = getRandomInRange(300, 900);
+  var locationY = getRandomInRange(100, 500);
+
   adsList[i] = {
-    author: {
-      avatar: getRandomUniqueItem(AVATAR_LIST)
+    'author': {
+      'avatar': getRandomUniqueItem(AVATAR_LIST)
     },
-    offer: {
-      title: getRandomUniqueItem(TITLE_LIST),
-      address: locationX + ', ' + locationY,
-      price: getRandomInRange(1000, 1000000),
-      type: getRandomItem(TYPE_LIST),
-      rooms: getRandomInRange(1, 5),
-      quests: getRandomInRange(1, 10),
-      checkin: getRandomItem(TIME_LIST),
-      checkout: getRandomItem(TIME_LIST),
-      features: getRandomLengthArr(FEATURES_LIST),
-      description: '',
-      photos: []
+
+    'offer': {
+      'title': getRandomUniqueItem(TITLE_LIST),
+      'address': locationX + ', ' + locationY,
+      'price': getRandomInRange(1000, 1000000),
+      'type': getRandomItem(TYPE_LIST),
+      'rooms': getRandomInRange(1, 5),
+      'quests': getRandomInRange(1, 10),
+      'checkin': getRandomItem(TIME_LIST),
+      'checkout': getRandomItem(TIME_LIST),
+      'features': getRandomLengthArr(FEATURES_LIST),
+      'description': '',
+      'photos': []
     },
-    location: {
-      x: locationX,
-      y: locationY
+
+    'location': {
+      'x': locationX,
+      'y': locationY
     }
   };
-  console.log(adsList);
 }
+
+var tokyoMap = document.querySelector('.tokyo__pin-map');
+var fragment = document.createDocumentFragment();
+var dialog = document.querySelector('.dialog');
+var dialogTitle = document.querySelector('.dialog__title');
+var dialogPanel = document.querySelector('.dialog__panel');
+var lodgeTemplate = document.querySelector('#lodge-template').content;
+
+var renderPin = function (advert) {
+  var pinElement = document.createElement('div');
+  var img = '<img src="' + advert.author.avatar + '" class="rounded" width="40" height="40">';
+  pinElement.className = 'pin';
+  pinElement.style = 'left: ' + (advert.location.x - 28) + 'px; top: ' + (advert.location.y - 75) + 'px';
+  pinElement.insertAdjacentHTML('afterbegin', img);
+  return pinElement;
+};
+
+for (i = 0; i < adsList.length; i++) {
+  fragment.appendChild(renderPin(adsList[i]));
+}
+
+tokyoMap.appendChild(fragment);
+
+var renderAdvert = function (advert) {
+  var lodgeElement = lodgeTemplate.cloneNode(true);
+  var lodgeFeatures = lodgeElement.querySelector('.lodge__features');
+  lodgeElement.querySelector('.lodge__title').textContent = advert.offer.title;
+  lodgeElement.querySelector('.lodge__address').textContent = advert.offer.address;
+  lodgeElement.querySelector('.lodge__price').innerHTML = advert.offer.price + '&#x20bd;/ночь';
+  if (advert.offer.type === 'flat') {
+    lodgeElement.querySelector('.lodge__type').textContent = 'Квартира';
+  } else if (advert.offer.type === 'bungalo') {
+    lodgeElement.querySelector('.lodge__type').textContent = 'Бунгало';
+  } else {
+    lodgeElement.querySelector('.lodge__type').textContent = 'Квартира';
+  }
+  lodgeElement.querySelector('.lodge__rooms-and-guests').textContent = 'Для ' + advert.offer.guests + ' гостей в ' + advert.offer.rooms + ' комнатах';
+  lodgeElement.querySelector('.lodge__checkin-time').textContent = 'Заезд после ' + advert.offer.checkin + ', выезд до ' + advert.offer.checkout;
+  for (i = 0; i < advert.offer.features.length; i++) {
+    var span = '<span class="feature__image feature__image--' + advert.offer.features[i] + '"></span>';
+    lodgeFeatures.insertAdjacentHTML('afterbegin', span);
+  }
+  lodgeElement.querySelector('.lodge__description').textContent = advert.offer.description;
+  return lodgeElement;
+};
+
+fragment.appendChild(renderAdvert(adsList[0]));
+dialog.replaceChild(fragment, dialogPanel);
+dialogTitle.querySelector('img').src = adsList[0].author.avatar;
