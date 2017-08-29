@@ -1,5 +1,8 @@
 'use strict';
 
+var KEY_ENTER = 13;
+var KEY_ESCAPE = 27;
+
 var AVATAR_LIST = ['img/avatars/user01.png', 'img/avatars/user02.png', 'img/avatars/user03.png', 'img/avatars/user04.png', 'img/avatars/user05.png', 'img/avatars/user06.png', 'img/avatars/user07.png', 'img/avatars/user08.png'];
 
 var TITLE_LIST = ['Большая уютная квартира', 'Маленькая неуютная квартира', 'Огромный прекрасный дворец', 'Маленький ужасный дворец', 'Красивый гостевой домик', 'Некрасивый негостеприимный домик', 'Уютное бунгало далеко от моря', 'Неуютное бунгало по колено в воде'];
@@ -89,6 +92,8 @@ var renderPin = function (advert) {
   pinElement.className = 'pin';
   pinElement.style = 'left: ' + (advert.location.x - 28) + 'px; top: ' + (advert.location.y - 75) + 'px';
   pinElement.insertAdjacentHTML('afterbegin', img);
+  pinElement.setAttribute('data-index', i);
+  pinElement.setAttribute('tabindex', 0);
   return pinElement;
 };
 
@@ -124,3 +129,78 @@ var renderAdvert = function (advert) {
 fragment.appendChild(renderAdvert(adsList[0]));
 dialog.replaceChild(fragment, dialogPanel);
 dialogTitle.querySelector('img').src = adsList[0].author.avatar;
+
+var mainPin = document.querySelector('.pin__main');
+var pin = document.querySelectorAll('.pin');
+var lodgeCloseIcon = dialog.querySelector('.dialog__close');
+
+var openDialogWindow = function () {
+  dialog.classList.remove('hidden');
+};
+
+var closeDialogWindow = function () {
+  dialog.classList.add('hidden');
+};
+
+var removePinActive = function () {
+  for (i = 0; i <= adsList.length; i++) {
+    pin[i].classList.remove('pin--active');
+  }
+};
+
+var onCloseIconClick = function () {
+  removePinActive();
+  closeDialogWindow();
+};
+
+var onPinClick = function (evt) {
+  removePinActive();
+  var pinTarget = evt.currentTarget;
+  pinTarget.classList.add('pin--active');
+  if (pinTarget !== mainPin) {
+    var pinIndex = pinTarget.getAttribute('data-index');
+    // renderAdvert(pinIndex);
+    dialog.replaceChild(renderAdvert(pinIndex), dialogPanel);
+    openDialogWindow();
+  } else {
+    closeDialogWindow();
+  }
+};
+
+var onPinPush = function (evt) {
+  if (evt.keyCode === KEY_ENTER) {
+    removePinActive();
+    var pinTarget = evt.currentTarget;
+    pinTarget.classList.add('pin--active');
+    if (pinTarget !== mainPin) {
+      var pinIndex = pinTarget.getAttribute('data-index');
+      dialog.replaceChild(renderAdvert(pinIndex), dialogPanel);
+      openDialogWindow();
+    } else {
+      closeDialogWindow();
+    }
+  }
+};
+
+var onCloseIconPush = function (evt) {
+  if (evt.keyCode === KEY_ESCAPE) {
+    removePinActive();
+    closeDialogWindow();
+  }
+};
+
+var onEscapePush = function (evt) {
+  if (evt.keyCode === KEY_ESCAPE && (!dialog.classList.contains('hidden'))) {
+    removePinActive();
+    closeDialogWindow();
+  }
+};
+
+for (i = 0; i <= adsList.length; i++) {
+  pin[i].addEventListener('click', onPinClick);
+  pin[i].addEventListener('keydown', onPinPush);
+}
+
+lodgeCloseIcon.addEventListener('click', onCloseIconClick);
+lodgeCloseIcon.addEventListener('keydown', onCloseIconPush);
+document.addEventListener('keydown', onEscapePush);
